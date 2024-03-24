@@ -5,8 +5,8 @@
  * @format
  */
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import React, { useEffect, useState } from 'react';
+import type { PropsWithChildren } from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -15,6 +15,8 @@ import {
   Text,
   useColorScheme,
   View,
+  Button,
+  TextInput,
 } from 'react-native';
 
 import {
@@ -24,6 +26,8 @@ import {
   LearnMoreLinks,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
+
+import { MAPLE_API_URL, MAPLE_API_KEY } from '@env';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -55,12 +59,49 @@ function Section({children, title}: SectionProps): React.JSX.Element {
   );
 }
 
+interface IUser {
+  userId: string;
+  name: string;
+  class: string;
+}
+
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
+  const [userInfo, setUserInfo] = useState<IUser>({
+    userId: '', name: '', class: ''
+  })
+
+  useEffect(() => {
+    fetch(MAPLE_API_URL+'character/basic?ocid='+userInfo.userId+'&date='+'2024-03-23', {
+      method: 'GET',
+      headers: {
+        "x-nxopen-api-key": MAPLE_API_KEY
+      }
+    })
+    .then(res => res.json())
+    .then(res => console.log(res))
+    .catch(err => console.log(err))
+  }, [userInfo.userId]);
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
+
+  const getUserOcid = async () => {
+    fetch(MAPLE_API_URL+'id?'+'character_name='+userInfo.name, {
+      method: 'GET',
+      headers: {
+        "x-nxopen-api-key": MAPLE_API_KEY
+      }
+    })
+    .then(res => res.json())
+    .then(res => setUserInfo({
+        ...userInfo,
+        userId: res.ocid
+      })
+    )
+    .catch(err => console.log(err))
+  }
 
   return (
     <SafeAreaView style={backgroundStyle}>
@@ -68,30 +109,19 @@ function App(): React.JSX.Element {
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={backgroundStyle.backgroundColor}
       />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
+      <View style={{ flexDirection: 'row', justifyContent:'space-between', marginBottom:'2%' }}>
+        <TextInput
+          editable
+          onChangeText={text => setUserInfo({
+            ...userInfo,
+            name: text
+          })}
+          value={userInfo.name}
+          style={{width:'80%'}}
+        />
+        <Button title='가져오기' onPress={getUserOcid}></Button>
+      </View>
+      <Text>{userInfo.userId}</Text>
     </SafeAreaView>
   );
 }
