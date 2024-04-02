@@ -28,36 +28,7 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 
 import { MAPLE_API_URL, MAPLE_API_KEY } from '@env';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+import { Dropdown } from 'react-native-element-dropdown';
 
 interface IUser {
   userId: string;
@@ -65,11 +36,33 @@ interface IUser {
   class: string;
 }
 
+interface ISkills {
+  name: string;
+  wantLevel: number;
+}[]
+
+interface IDropDown {
+  label: string;
+  value: number;
+}
+
+const dropDownData: IDropDown[] = [
+  { label: '30', value: 30 },
+  { label: '60', value: 60 }
+]
+
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
   const [userInfo, setUserInfo] = useState<IUser>({
     userId: '', name: '', class: ''
   })
+  const [skill, setSkill] = useState<string>('');
+  const [skills, setSkills] = useState<ISkills[]>([]);
+
+  const [dropDownValue, setDropDownValue] = useState<IDropDown>({
+    label: '', value: 0
+  });
+  const [isFocus, setIsFocus] = useState<boolean>(false);
 
   useEffect(() => {
     fetch(MAPLE_API_URL+'character/basic?ocid='+userInfo.userId+'&date='+'2024-03-23', {
@@ -79,7 +72,13 @@ function App(): React.JSX.Element {
       }
     })
     .then(res => res.json())
-    .then(res => console.log(res))
+    .then(res =>{
+      setUserInfo({
+        ...userInfo,
+        name: res.character_name,
+        class: res.character_class,
+      });
+    })
     .catch(err => console.log(err))
   }, [userInfo.userId]);
 
@@ -103,6 +102,15 @@ function App(): React.JSX.Element {
     .catch(err => console.log(err))
   }
 
+  const addSkill = () => {
+    const originSkills: ISkills[] = [...skills];
+    originSkills.push({
+      name: skill,
+      wantLevel: dropDownValue.value
+    })
+    setSkills([...originSkills]);
+  }
+
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar
@@ -117,11 +125,48 @@ function App(): React.JSX.Element {
             name: text
           })}
           value={userInfo.name}
-          style={{width:'80%'}}
+          style={styles.inputName}
         />
         <Button title='가져오기' onPress={getUserOcid}></Button>
       </View>
-      <Text>{userInfo.userId}</Text>
+      <Text>{userInfo.class}</Text>
+      <View style={{ flexDirection: 'row', justifyContent:'space-between', marginBottom:'2%' }}>
+        <TextInput
+          editable
+          onChangeText={text => setSkill(text)}
+          value={skill}
+          style={styles.inputName}
+        />
+        <Dropdown
+          style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
+          placeholderStyle={styles.placeholderStyle}
+          selectedTextStyle={styles.selectedTextStyle}
+          inputSearchStyle={styles.inputSearchStyle}
+          iconStyle={styles.iconStyle}
+          data={dropDownData}
+          search
+          maxHeight={300}
+          labelField="label"
+          valueField="value"
+          placeholder={!isFocus ? 'Select Level' : '...'}
+          searchPlaceholder="Search..."
+          value={dropDownValue}
+          onFocus={() => setIsFocus(true)}
+          onBlur={() => setIsFocus(false)}
+          onChange={item => {
+            setDropDownValue({
+              ...dropDownValue,
+              label: item.label,
+              value: item.value
+            });
+            setIsFocus(false);
+          }}
+        />
+        <Button title='입력하기' onPress={addSkill}></Button>
+      </View>
+      {skills.map((v, idx) => (
+        <Text key={idx}>{'스킬명: ' + v.name + ' 원하는 레벨: ' + v.wantLevel}</Text>
+      ))}
     </SafeAreaView>
   );
 }
@@ -142,6 +187,33 @@ const styles = StyleSheet.create({
   },
   highlight: {
     fontWeight: '700',
+  },
+  inputName: {
+    borderWidth: 1,
+    borderColor: 'black',
+    width: '50%',
+  },
+  placeholderStyle: {
+    fontSize: 16,
+  },
+  selectedTextStyle: {
+    fontSize: 16,
+  },
+  iconStyle: {
+    width: 20,
+    height: 20,
+  },
+  inputSearchStyle: {
+    height: 40,
+    fontSize: 16,
+  },
+  dropdown: {
+    width: '30%',
+    height: 50,
+    borderColor: 'gray',
+    borderWidth: 0.5,
+    borderRadius: 8,
+    paddingHorizontal: 8,
   },
 });
 
