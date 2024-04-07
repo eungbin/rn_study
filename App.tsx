@@ -29,6 +29,7 @@ import {
 
 import { MAPLE_API_URL, MAPLE_API_KEY } from '@env';
 import { Dropdown } from 'react-native-element-dropdown';
+import CustomButton from './components/Button/CustomButton';
 
 interface IUser {
   userId: string;
@@ -110,6 +111,11 @@ function App(): React.JSX.Element {
     })
     setSkills([...originSkills]);
   }
+  const removeSkill = (idx: number) => {
+    const originSkills: ISkills[] = [...skills];
+    originSkills.splice(idx, 1);
+    setSkills([...originSkills]);
+  }
 
   return (
     <SafeAreaView style={backgroundStyle}>
@@ -162,11 +168,17 @@ function App(): React.JSX.Element {
             setIsFocus(false);
           }}
         />
-        <Button title='입력하기' onPress={addSkill}></Button>
+        {/* <Button title='입력하기' onPress={addSkill}></Button> */}
+        <CustomButton buttonColor='blue' innerText='입력하기' innerTextColor='red' onPress={addSkill} />
       </View>
-      {skills.map((v, idx) => (
-        <Text key={idx}>{'스킬명: ' + v.name + ' 원하는 레벨: ' + v.wantLevel}</Text>
-      ))}
+      <View style={{display:'flex', flexWrap:'wrap', flexDirection:'row', rowGap:5, columnGap:10}}>
+        {skills.map((v, idx) => (
+          <View key={idx} style={{display:'flex', flexDirection:'row', alignItems:'center', columnGap:5}}>
+            <CustomButton buttonColor='white' innerText='입력하기' innerTextColor='red' onPress={() => removeSkill(idx)} />
+            <Text>{'스킬: ' + v.name + ' 레벨: ' + v.wantLevel}</Text>
+          </View>
+        ))}
+      </View>
     </SafeAreaView>
   );
 }
