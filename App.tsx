@@ -17,6 +17,7 @@ import {
   View,
   Button,
   TextInput,
+  Alert,
 } from 'react-native';
 
 import {
@@ -50,7 +51,7 @@ interface IDropDown {
 const dropDownData: IDropDown[] = [
   { label: '30', value: 30 },
   { label: '60', value: 60 }
-]
+];
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -117,6 +118,22 @@ function App(): React.JSX.Element {
     setSkills([...originSkills]);
   }
 
+  const popAlert = (idx: number) => {
+    Alert.alert(
+      "정말 삭제하시겠습니까?",
+      skills[idx].name,
+      [
+        {
+          text: '네',
+          onPress: () => removeSkill(idx),
+          style: 'cancel'
+        },
+        { text: '아니요' }
+      ],
+      { cancelable: true }
+    )
+  }
+
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar
@@ -135,8 +152,10 @@ function App(): React.JSX.Element {
         />
         <Button title='가져오기' onPress={getUserOcid}></Button>
       </View>
-      <Text>{userInfo.class}</Text>
-      <View style={{ flexDirection: 'row', justifyContent:'space-between', marginBottom:'2%' }}>
+      <View style={{ marginBottom:'2%' }}>
+        <Text>{userInfo.class}</Text>
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent:'space-between' }}>
         <TextInput
           editable
           onChangeText={text => setSkill(text)}
@@ -168,14 +187,12 @@ function App(): React.JSX.Element {
             setIsFocus(false);
           }}
         />
-        {/* <Button title='입력하기' onPress={addSkill}></Button> */}
         <CustomButton buttonColor='blue' innerText='입력하기' innerTextColor='red' onPress={addSkill} />
       </View>
-      <View style={{display:'flex', flexWrap:'wrap', flexDirection:'row', rowGap:5, columnGap:10}}>
+      <View style={{ display:'flex', flexWrap:'wrap', flexDirection:'row', rowGap:5, columnGap:10, paddingHorizontal:'5%', paddingVertical:'2%' }}>
         {skills.map((v, idx) => (
-          <View key={idx} style={{display:'flex', flexDirection:'row', alignItems:'center', columnGap:5}}>
-            <CustomButton buttonColor='white' innerText='입력하기' innerTextColor='red' onPress={() => removeSkill(idx)} />
-            <Text>{'스킬: ' + v.name + ' 레벨: ' + v.wantLevel}</Text>
+          <View key={idx}>
+            <Text onPress={() => popAlert(idx)}>{'스킬: ' + v.name + ' 레벨: ' + v.wantLevel}</Text>
           </View>
         ))}
       </View>
